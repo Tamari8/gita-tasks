@@ -1,0 +1,65 @@
+.app-container {
+  max-width: 400px;
+  margin: 40px auto;
+  font-family: sans-serif;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.city-btn {
+  padding: 8px 16px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  color: black;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: 0.3s;
+}
+
+.city-btn.active {
+  background-color: #007BFF;
+  color: white;
+  border-color: #007BFF;
+}
+
+.weather-box {
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.weather-box h2 {
+  margin-top: 0;
+}
+
+.live-btn {
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  transition: 0.3s;
+}
+
+.live-btn.active-live {
+  background-color: #dc3545;
+}
+
+.live-tracker {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #e6ffe6;
+  border-radius: 5px;
+}
+
+.live-tracker p {
+  color: green;
+  margin: 0;
+  font-weight: bold;
+}
