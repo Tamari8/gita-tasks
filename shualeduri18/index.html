@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub User Search</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #F6F8FF;
+      --card-bg: #FEFEFE;
+      --text-main: #4B6A9B;
+      --text-bold: #2B3442;
+      --text-light: #697C9A;
+      --primary: #0079FF;
+      --primary-hover: #60ABFF;
+      --error: #F74646;
+      --shadow: 0px 16px 30px -10px rgba(70, 96, 187, 0.20);
+    }
+
+    body.dark-theme {
+      --bg: #141D2F;
+      --card-bg: #1E2A47;
+      --text-main: #FFFFFF;
+      --text-bold: #FFFFFF;
+      --text-light: #FFFFFF;
+      --shadow: none;
+    }
+
+    body {
+      font-family: 'Space Mono', monospace;
+      background-color: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-size: 15px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 730px;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-bold);
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .theme-toggle:hover {
+      color: var(--text-bold);
+    }
+
+    body.dark-theme .theme-toggle:hover {
+      color: #90A4D4;
+    }
+
+    .search-container {
+      background-color: var(--card-bg);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      padding: 9.5px 10px 9.5px 32px;
+      margin-bottom: 24px;
+      transition: background-color 0.3s;
+    }
+
+    .search-icon {
+      margin-right: 24px;
+      flex-shrink: 0;
+    }
+
+    #search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 18px;
+      color: var(--text-bold);
+      min-width: 0;
+    }
+
+    #search-input::placeholder {
+      color: var(--text-main);
+    }
+
+    .error-text {
+      color: var(--error);
+      font-weight: 700;
+      margin-right: 24px;
+      display: none;
+    }
+
+    .search-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12.5px 24px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .search-btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .user-card {
+      background-color: var(--card-bg);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      padding: 48px;
+      display: grid;
+      grid-template-columns: 117px 1fr;
+      grid-template-areas:
+        "avatar header"
+        "avatar bio"
+        "avatar stats"
+        "avatar links";
+      column-gap: 37px;
+      transition: background-color 0.3s;
+    }
+
+    .avatar-wrapper {
+      grid-area: avatar;
+    }
+
+    .avatar-wrapper img {
+      width: 117px;
+      height: 117px;
+      border-radius: 50%;
+    }
+
+    .card-header {
+      grid-area: header;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .name-wrap h1 {
+      font-size: 26px;
+      color: var(--text-bold);
+      margin-bottom: 2px;
+    }
+
+    .username {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 16px;
+    }
+
+    .date {
+      color: var(--text-light);
+      margin-top: 8px;
+    }
+
+    .bio {
+      grid-area: bio;
+      margin-bottom: 32px;
+      line-height: 25px;
+    }
+
+    .stats {
+      grid-area: stats;
+      background-color: var(--bg);
+      border-radius: 10px;
+      padding: 15px 32px;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 37px;
+      transition: background-color 0.3s;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .stat-title {
+      font-size: 13px;
+      color: var(--text-main);
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-bold);
+    }
+
+    .links-grid {
+      grid-area: links;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 19px;
+    }
+
+    .link-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 15px;
+    }
+
+    .link-item a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .link-item a:hover {
+      text-decoration: underline;
+    }
+
+    .link-icon {
+      width: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+      .user-card {
+        padding: 40px;
+        grid-template-areas:
+          "avatar header"
+          "bio bio"
+          "stats stats"
+          "links links";
+      }
+      .card-header {
+        flex-direction: column;
+        margin-bottom: 24px;
+      }
+      .date {
+        margin-top: 4px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .user-card {
+        grid-template-columns: 70px 1fr;
+        column-gap: 20px;
+        padding: 32px 24px;
+      }
+      
+      .avatar-wrapper img {
+        width: 70px;
+        height: 70px;
+      }
+      
+      .name-wrap h1 {
+        font-size: 16px;
+      }
+      
+      .username, .date {
+        font-size: 13px;
+      }
+      
+      .bio {
+        font-size: 13px;
+        line-height: 25px;
+      }
+      
+      .stats {
+        padding: 18px 14px;
+        text-align: center;
+      }
+      
+      .stat-title {
+        font-size: 11px;
+      }
+      
+      .stat-value {
+        font-size: 16px;
+      }
+      
+      .links-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      
+      .search-container {
+        padding: 7px 7px 7px 16px;
+      }
+      
+      #search-input {
+        font-size: 13px;
+      }
+      
+      .search-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+      }
+      
+      .search-btn {
+        padding: 12.5px 16px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">devfinder</div>
+      <button type="button" id="theme-btn" class="theme-toggle">
+        <span id="theme-text">DARK</span>
+        <span id="theme-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M19.513 11.397a.701.701 0 00-.588.128 7.496 7.496 0 01-2.276 1.336 7.101 7.101 0 01-2.583.462 7.505 7.505 0 01-5.32-2.209 7.568 7.568 0 01-2.199-5.342c0-.873.154-1.72.41-2.49a6.904 6.904 0 011.227-2.21.656.656 0 00-.102-.924.703.703 0 00-.589-.128C5.32.61 3.427 1.92 2.072 3.666A10.158 10.158 0 000 9.83c0 2.8 1.125 5.342 2.967 7.19a10.025 10.025 0 007.16 2.98c2.353 0 4.527-.822 6.266-2.183a10.13 10.13 0 003.58-5.612.625.625 0 00-.46-.808z"/></svg>
+        </span>
+      </button>
+    </header>
+
+    <form id="search-form" class="search-container">
+      <svg class="search-icon" width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.609 0c5.85 0 10.608 4.746 10.608 10.58 0 2.609-.952 5.002-2.537 6.847l5.66 5.66a1.264 1.264 0 01-1.785 1.787l-5.657-5.657a10.56 10.56 0 01-6.29 2.062C4.746 21.28 0 16.532 0 10.58 0 4.745 4.746 0 10.609 0zm0 2.529a8.058 8.058 0 100 16.115 8.058 8.058 0 000-16.115z" fill="#0079ff"/></svg>
+      <input type="text" id="search-input" placeholder="Search GitHub username..." autocomplete="off">
+      <span id="error-message" class="error-text">No results</span>
+      <button type="submit" class="search-btn">Search</button>
+    </form>
+
+    <main class="user-card" id="user-card">
+      <div class="avatar-wrapper">
+        <img id="avatar" src="https://avatars.githubusercontent.com/u/583231?v=4" alt="Avatar">
+      </div>
+      <div class="card-header">
+        <div class="name-wrap">
+          <h1 id="name">The Octocat</h1>
+          <a href="https://github.com/octocat" id="username" class="username" target="_blank">@octocat</a>
+        </div>
+        <span id="date" class="date">Joined 25 Jan 2011</span>
+      </div>
+      
+      <p id="bio" class="bio" style="opacity: 0.75;">This profile has no bio</p>
+      
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-title">Repos</span>
+          <span class="stat-value" id="repos">8</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-title">Followers</span>
+          <span class="stat-value" id="followers">3938</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-title">Following</span>
+          <span class="stat-value" id="following">9</span>
+        </div>
+      </div>
+      
+      <div class="links-grid">
+        <div class="link-item">
+          <div class="link-icon"><svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M7.023 0C3.153 0 0 3.14 0 6.992c0 4.095 5.89 12.003 6.425 12.723.143.193.364.306.602.306.236 0 .457-.113.598-.306.536-.72 6.426-8.628 6.426-12.723C14.05 3.14 10.897 0 7.023 0zm0 9.479c-1.373 0-2.49-1.112-2.49-2.486s1.117-2.486 2.49-2.486 2.49 1.112 2.49 2.486-1.117 2.486-2.49 2.486z"/></svg></div>
+          <span id="location">San Francisco</span>
+        </div>
+        <div class="link-item" style="opacity: 0.5;">
+          <div class="link-icon"><svg width="20" height="17" viewBox="0 0 20 17" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M20 1.954a8.156 8.156 0 01-2.357.653A4.12 4.12 0 0019.448.33a8.16 8.16 0 01-2.606.996A4.095 4.095 0 0013.847 0c-2.266 0-4.103 1.848-4.103 4.128 0 .323.036.638.106.94-3.41-.173-6.433-1.815-8.457-4.316a4.113 4.113 0 00-.556 2.073c0 1.432.724 2.695 1.825 3.435A4.062 4.062 0 01.8 5.75v.052c0 1.996 1.413 3.66 3.29 4.041a4.1 4.1 0 01-1.852.07c.522 1.636 2.032 2.828 3.822 2.86A8.22 8.22 0 010 14.403a11.59 11.59 0 006.29 1.854c7.547 0 11.675-6.293 11.675-11.75 0-.178-.004-.356-.012-.533A8.347 8.347 0 0020 1.954z"/></svg></div>
+          <a id="twitter" target="_blank" style="pointer-events: none;">Not Available</a>
+        </div>
+        <div class="link-item">
+          <div class="link-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10.155 4.054l-1.341-1.34A5.952 5.952 0 00.395 11.132l1.638 1.639 2.16-2.16-1.614-1.616a2.951 2.951 0 014.175-4.174l1.34 1.34 2.061-2.061zM11.393 2.16L9.231 4.321l1.613 1.615a2.952 2.952 0 01-4.174 4.174l-1.34 1.34-2.062 2.062 1.34 1.34A5.952 5.952 0 0013.025 6.43l-1.632-1.632v-2.64z"/></svg></div>
+          <a id="blog" target="_blank" href="https://github.blog">https://github.blog</a>
+        </div>
+        <div class="link-item">
+          <div class="link-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10.198.05a.735.735 0 00-.395 0L1.758 3.518A.735.735 0 001.25 4.21v14.053a.735.735 0 00.735.737h15.934a.735.735 0 00.735-.737V4.21a.735.735 0 00-.508-.691L10.198.05zm-.105 1.5l7.158 2.385v13.565H2.651V3.935l7.442-2.385zM6.333 7.026h2.947v2.948H6.333V7.026zm5.894 0h2.948v2.948h-2.948V7.026zM6.333 11.447h2.947v2.948H6.333v-2.948zm5.894 0h2.948v2.948h-2.948v-2.948z"/></svg></div>
+          <a id="company" target="_blank" href="https://github.com/github">@github</a>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    const searchForm = document.getElementById('search-form');
+    const searchInput = document.getElementById('search-input');
+    const errorMsg = document.getElementById('error-message');
+    const themeBtn = document.getElementById('theme-btn');
+    const themeText = document.getElementById('theme-text');
+    const themeIcon = document.getElementById('theme-icon');
+
+    const moonIcon = `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M19.513 11.397a.701.701 0 00-.588.128 7.496 7.496 0 01-2.276 1.336 7.101 7.101 0 01-2.583.462 7.505 7.505 0 01-5.32-2.209 7.568 7.568 0 01-2.199-5.342c0-.873.154-1.72.41-2.49a6.904 6.904 0 011.227-2.21.656.656 0 00-.102-.924.703.703 0 00-.589-.128C5.32.61 3.427 1.92 2.072 3.666A10.158 10.158 0 000 9.83c0 2.8 1.125 5.342 2.967 7.19a10.025 10.025 0 007.16 2.98c2.353 0 4.527-.822 6.266-2.183a10.13 10.13 0 003.58-5.612.625.625 0 00-.46-.808z"/></svg>`;
+    const sunIcon = `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M9.895 4.395v-3.79a.605.605 0 011.21 0v3.79a.605.605 0 01-1.21 0zM17.158 9.5H20.95a.605.605 0 010 1.21h-3.792a.605.605 0 010-1.21zM9.895 16.395v3.79a.605.605 0 011.21 0v-3.79a.605.605 0 01-1.21 0zM2.842 9.5H-.95a.605.605 0 010 1.21h3.792a.605.605 0 010-1.21zM14.935 3.32a.605.605 0 01.856 0l2.67 2.68a.605.605 0 01-.857.855l-2.67-2.68a.605.605 0 010-.855zM17.604 14.852a.605.605 0 010 .856l-2.67 2.67a.605.605 0 01-.857-.855l2.67-2.67a.605.605 0 01.857 0zM3.32 14.935a.605.605 0 010 .856l2.68 2.67a.605.605 0 01.855-.855l-2.68-2.67a.605.605 0 01-.855 0zM5.989 3.32a.605.605 0 010 .856l-2.67 2.68a.605.605 0 01-.857-.855l2.67-2.68a.605.605 0 01.857 0zM10.5 6.002a4.498 4.498 0 100 8.996 4.498 4.498 0 000-8.996z"/></svg>`;
+
+    function setTheme(isDark) {
+      if (isDark) {
+        document.body.classList.add('dark-theme');
+        themeText.textContent = 'LIGHT';
+        themeIcon.innerHTML = sunIcon;
+        try { localStorage.setItem('theme', 'dark'); } catch(e) {}
+      } else {
+        document.body.classList.remove('dark-theme');
+        themeText.textContent = 'DARK';
+        themeIcon.innerHTML = moonIcon;
+        try { localStorage.setItem('theme', 'light'); } catch(e) {}
+      }
+    }
+
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let savedTheme = null;
+    try {
+      savedTheme = localStorage.getItem('theme');
+    } catch(e) {}
+
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      setTheme(true);
+    } else {
+      setTheme(false);
+    }
+
+    themeBtn.addEventListener('click', () => {
+      const isDark = document.body.classList.contains('dark-theme');
+      setTheme(!isDark);
+    });
+
+    const API_URL = 'https://api.github.com/users/';
+
+    async function getUser(username) {
+      try {
+        const res = await fetch(API_URL + username);
+        if (!res.ok) {
+          if (res.status === 404) {
+            errorMsg.style.display = 'block';
+          }
+          return;
+        }
+        errorMsg.style.display = 'none';
+        const data = await res.json();
+        renderUser(data);
+      } catch (err) {
+        console.error('Error fetching user:', err);
+      }
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      const options = { day: 'numeric', month: 'short', year: 'numeric' };
+      return `Joined ${date.toLocaleDateString('en-GB', options)}`;
+    }
+
+    function checkNull(value, element) {
+      const parent = element.parentElement;
+      if (value === null || value === "") {
+        parent.style.opacity = 0.5;
+        return "Not Available";
+      } else {
+        parent.style.opacity = 1;
+        return value;
+      }
+    }
+
+    function renderUser(data) {
+      document.getElementById('avatar').src = data.avatar_url;
+      
+      document.getElementById('name').textContent = data.name || data.login;
+      document.getElementById('username').textContent = `@${data.login}`;
+      document.getElementById('username').href = data.html_url;
+      document.getElementById('date').textContent = formatDate(data.created_at);
+
+      const bio = document.getElementById('bio');
+      if (data.bio) {
+        bio.textContent = data.bio;
+        bio.style.opacity = 1;
+      } else {
+        bio.textContent = 'This profile has no bio';
+        bio.style.opacity = 0.75;
+      }
+
+      document.getElementById('repos').textContent = data.public_repos;
+      document.getElementById('followers').textContent = data.followers;
+      document.getElementById('following').textContent = data.following;
+
+      const locText = document.getElementById('location');
+      locText.textContent = checkNull(data.location, locText);
+
+      const twitterText = document.getElementById('twitter');
+      const twValue = checkNull(data.twitter_username, twitterText);
+      twitterText.textContent = twValue;
+      if (data.twitter_username) {
+        twitterText.href = `https://twitter.com/${data.twitter_username}`;
+        twitterText.style.pointerEvents = 'auto';
+      } else {
+        twitterText.removeAttribute('href');
+        twitterText.style.pointerEvents = 'none';
+      }
+
+      const blogText = document.getElementById('blog');
+      let blogValue = checkNull(data.blog, blogText);
+      if (data.blog) {
+        blogText.textContent = blogValue;
+        blogText.href = data.blog.startsWith('http') ? data.blog : `https://${data.blog}`;
+        blogText.style.pointerEvents = 'auto';
+      } else {
+        blogText.textContent = "Not Available";
+        blogText.removeAttribute('href');
+        blogText.style.pointerEvents = 'none';
+      }
+
+      const compText = document.getElementById('company');
+      const compValue = checkNull(data.company, compText);
+      compText.textContent = compValue;
+      if (data.company) {
+        const companyName = data.company.replace('@', '');
+        compText.href = `https://github.com/${companyName}`;
+        compText.style.pointerEvents = 'auto';
+      } else {
+        compText.removeAttribute('href');
+        compText.style.pointerEvents = 'none';
+      }
+    }
+
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const user = searchInput.value.trim();
+      if (user) {
+        getUser(user);
+      }
+    });
+
+    getUser('octocat');
+  </script>
+</body>
+</html>

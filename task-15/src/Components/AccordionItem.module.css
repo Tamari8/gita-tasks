@@ -1,0 +1,33 @@
+.item {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 15px 0;
+}
+
+.questionBtn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4b4c5f;
+  text-align: left;
+}
+
+.questionBtn:hover {
+  color: #f47b56;
+}
+
+.active {
+  font-weight: 700;
+  color: #1d1e35;
+}
+
+.answer {
+  color: #787887;
+  font-size: 13px;
+  padding-top: 10px;
+  line-height: 1.5;
+}

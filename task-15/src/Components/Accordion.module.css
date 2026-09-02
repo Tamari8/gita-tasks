@@ -1,0 +1,41 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 900px;
+  margin: 100px auto;
+  position: relative;
+}
+
+.imageSection {
+  padding: 2rem;
+  text-align: center;
+  /* აქ მერე სურათის პოზიციონირებას დავამატებთ */
+}
+
+.faqSection {
+  padding: 2rem;
+}
+
+.title {
+  font-size: 32px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* მობაილის მერე ვწერთ დესკტოპის რესპონსივს */
+@media (min-width: 768px) {
+  .card {
+    flex-direction: row;
+    min-height: 450px;
+  }
+  .imageSection, .faqSection {
+    flex: 1;
+  }
+  .title {
+    text-align: left;
+  }
+}
