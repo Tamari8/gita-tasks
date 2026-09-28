@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sneaker Company | E-commerce Product Page</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="header">
+      <div class="container nav-container">
+        <div class="nav-left">
+          <button class="menu-toggle" id="menu-toggle" aria-label="Open Menu">
+            <img src="images/icon-menu.svg" alt="Menu" />
+          </button>
+          <a href="#" class="logo">
+            <img src="images/logo.svg" alt="Sneakers Logo" />
+          </a>
+          <nav class="nav-links" id="nav-links">
+            <button class="menu-close" id="menu-close" aria-label="Close Menu">
+              <img src="images/icon-close.svg" alt="Close" />
+            </button>
+            <a href="#">Collections</a>
+            <a href="#">Men</a>
+            <a href="#">Women</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+          </nav>
+        </div>
+
+        <div class="nav-right">
+          <button class="cart-btn" id="cart-btn" aria-label="Cart">
+            <img src="images/icon-cart.svg" alt="Cart" />
+            <span class="cart-count" id="cart-count">3</span>
+          </button>
+          <div class="avatar-container">
+            <img
+              src="images/image-avatar.png"
+              alt="User Avatar"
+              class="avatar"
+            />
+          </div>
+
+          <div class="cart-dropdown" id="cart-dropdown">
+            <div class="cart-header">Cart</div>
+            <div class="cart-body" id="cart-body">
+              <div class="cart-item">
+                <img
+                  src="images/image-product-1-thumbnail.jpg"
+                  alt="Thumbnail"
+                  class="cart-item-thumb"
+                />
+                <div class="cart-item-detail">
+                  <p>Fall Limited Edition Sneakers</p>
+                  <p>$125.00 x 3 <span class="bold">$375.00</span></p>
+                </div>
+                <button
+                  class="delete-btn"
+                  id="delete-btn"
+                  aria-label="Delete item"
+                >
+                  <img src="images/icon-delete.svg" alt="Delete" />
+                </button>
+              </div>
+              <button class="checkout-btn">Checkout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main container">
+      <section class="gallery-section">
+        <div class="main-img-container">
+          <img
+            src="images/image-product-1.jpg"
+            alt="Product Main"
+            id="main-product-img"
+          />
+        </div>
+        <div class="thumbnails">
+          <div class="thumb active" data-index="1">
+            <img src="images/image-product-1-thumbnail.jpg" alt="" />
+          </div>
+          <div class="thumb" data-index="2">
+            <img src="images/image-product-2-thumbnail.jpg" alt="" />
+          </div>
+          <div class="thumb" data-index="3">
+            <img src="images/image-product-3-thumbnail.jpg" alt="" />
+          </div>
+          <div class="thumb" data-index="4">
+            <img src="images/image-product-4-thumbnail.jpg" alt="" />
+          </div>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <span class="company-tag">Sneaker Company</span>
+        <h1 class="product-title">Fall Limited Edition Sneakers</h1>
+        <p class="product-description">
+          These low-profile sneakers are your perfect casual wear companion.
+          Featuring a durable rubber outer sole, they'll withstand everything
+          the weather can offer.
+        </p>
+
+        <div class="price-container">
+          <div class="current-price-wrap">
+            <span class="current-price">$125.00</span>
+            <span class="discount-badge">50%</span>
+          </div>
+          <span class="original-price">$250.00</span>
+        </div>
+
+        <div class="purchase-controls">
+          <div class="quantity-selector">
+            <button id="minus-btn">
+              <img src="images/icon-minus.svg" alt="Minus" />
+            </button>
+            <span id="quantity-num">3</span>
+            <button id="plus-btn">
+              <img src="images/icon-plus.svg" alt="Plus" />
+            </button>
+          </div>
+          <button class="add-to-cart-btn" id="add-to-cart-btn">
+            <img src="images/icon-cart.svg" alt="Cart" /> Add to cart
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <div class="overlay" id="overlay"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
