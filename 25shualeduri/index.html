@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Comments Section</title>
+    <!-- Google Fonts: Rubik (400, 500, 700) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              rubik: ["Rubik", "sans-serif"],
+            },
+            colors: {
+              moderateBlue: "hsl(238, 40%, 52%)",
+              softRed: "hsl(358, 79%, 66%)",
+              lightGrayishBlue: "hsl(239, 57%, 85%)",
+              paleRed: "hsl(357, 100%, 86%)",
+              darkBlue: "hsl(212, 24%, 26%)",
+              grayishBlue: "hsl(211, 10%, 45%)",
+              lightGray: "hsl(223, 19%, 93%)",
+              veryLightGray: "hsl(228, 33%, 97%)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Rubik", sans-serif;
+        background-color: hsl(228, 33%, 97%);
+        color: hsl(211, 10%, 45%);
+      }
+      textarea:focus {
+        outline: none;
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen py-8 md:py-16 px-4 flex justify-center items-start text-[15px] sm:text-[16px] antialiased"
+  >
+    <!-- Main Container -->
+    <main
+      class="w-full max-w-[730px] flex flex-col space-y-4 md:space-y-5"
+      id="comments-container"
+    >
+      <!-- Comments will be rendered dynamically by JavaScript -->
+    </main>
+
+    <div
+      id="delete-modal"
+      class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 hidden transition-opacity duration-200"
+    >
+      <div
+        class="bg-white rounded-lg p-7 max-w-[400px] w-full shadow-2xl flex flex-col space-y-4 animate-scaleUp"
+      >
+        <h2 class="text-xl font-medium text-darkBlue">Delete comment</h2>
+        <p class="text-grayishBlue leading-relaxed text-[15px]">
+          Are you sure you want to delete this comment? This will remove the
+          comment and can't be undone.
+        </p>
+        <div class="grid grid-cols-2 gap-3.5 pt-1">
+          <button
+            id="modal-cancel-btn"
+            class="py-3 px-4 rounded-lg bg-grayishBlue text-white font-medium text-sm sm:text-base uppercase tracking-wider hover:opacity-80 transition duration-150"
+          >
+            No, cancel
+          </button>
+          <button
+            id="modal-delete-btn"
+            class="py-3 px-4 rounded-lg bg-softRed text-white font-medium text-sm sm:text-base uppercase tracking-wider hover:opacity-80 transition duration-150"
+          >
+            Yes, delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initial comment data matching Frontend Mentor & screenshot mock data
+      const currentUser = {
+        username: "juliusomo",
+        image:
+          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face",
+      };
+
+      let initialComments = [
+        {
+          id: 1,
+          content:
+            "Impressive! Though it seems the drag feature could be improved. But overall it looks incredible. You've nailed the design and the responsiveness at various breakpoints works really well.",
+          createdAt: "1 month ago",
+          score: 12,
+          user: {
+            image:
+              "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
+            username: "amyrobson",
+          },
+          userVote: 0,
+          replies: [],
+        },
+        {
+          id: 2,
+          content:
+            "Woah, your project looks awesome! How long have you been coding for? I'm still new, but think I want to dive into React as well soon. Perhaps you can give me an insight on where I can learn React? Thanks!",
+          createdAt: "2 weeks ago",
+          score: 5,
+          user: {
+            image:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop&crop=face",
+            username: "maxblagun",
+          },
+          userVote: 0,
+          replies: [
+            {
+              id: 3,
+              content:
+                "If you're still new, I'd recommend focusing on the fundamentals of HTML, CSS, and JS before considering React. It's very tempting to jump ahead but lay a solid foundation first.",
+              createdAt: "1 week ago",
+              score: 4,
+              replyingTo: "maxblagun",
+              user: {
+                image:
+                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
+                username: "ramsesmiron",
+              },
+              userVote: 0,
+            },
+            {
+              id: 4,
+              content:
+                "I couldn't agree more with this. Everything moves so fast and it always seems like everyone knows the newest library/framework. But the fundamentals are what stay constant.",
+              createdAt: "2 days ago",
+              score: 2,
+              replyingTo: "ramsesmiron",
+              user: {
+                image: currentUser.image,
+                username: "juliusomo",
+              },
+              userVote: 0,
+            },
+          ],
+        },
+      ];
+
+      // Local Storage or initial state
+      let comments =
+        JSON.parse(localStorage.getItem("fm_interactive_comments")) ||
+        initialComments;
+
+      // Active state tracker
+      let activeReplyId = null; // comment or reply ID where reply form is opened
+      let activeEditId = null; // comment or reply ID currently being edited
+      let itemPendingDeletion = null; // { id, isReply, parentId }
+
+      function saveToStorage() {
+        localStorage.setItem(
+          "fm_interactive_comments",
+          JSON.stringify(comments),
+        );
+      }
+
+      const icons = {
+        plus: `<svg width="11" height="11" viewBox="0 0 11 11" fill="none" class="stroke-[#C5C6EF] group-hover:stroke-moderateBlue transition duration-150" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 1V10M1 5.5H10" stroke-width="2" stroke-linecap="round"/></svg>`,
+        minus: `<svg width="11" height="3" viewBox="0 0 11 3" fill="none" class="stroke-[#C5C6EF] group-hover:stroke-moderateBlue transition duration-150" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5H10" stroke-width="2" stroke-linecap="round"/></svg>`,
+        reply: `<svg width="14" height="13" viewBox="0 0 14 13" fill="none" class="fill-moderateBlue" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M.227 5.316 5.04.16a.657.657 0 0 1 1.115.465v2.842c3.568.102 6.643 1.942 7.74 5.253.256.772-.544 1.488-1.196 1.01-2.22-1.624-4.52-2.13-6.544-2.158v2.793a.657.657 0 0 1-1.115.465L.227 6.246a.658.658 0 0 1 0-.93Z"/></svg>`,
+        delete: `<svg width="12" height="14" viewBox="0 0 12 14" fill="none" class="fill-softRed" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.155 12.052A1.846 1.846 0 0 0 3 13.846h6c.966 0 1.764-.749 1.845-1.794l.872-9.22H.283l.872 9.22ZM10.5 1.538H8.346l-.503-.99A.923.923 0 0 0 7.017 0H4.983c-.352 0-.671.2-.826.548l-.503.99H1.5a.75.75 0 1 0 0 1.5h9a.75.75 0 0 0 0-1.5Z"/></svg>`,
+        edit: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="fill-moderateBlue" xmlns="http://www.w3.org/2000/svg"><path d="m13.479 2.872-2.35-2.35a1.666 1.666 0 0 0-2.357 0L.905 8.388a1.667 1.667 0 0 0-.488 1.179l-.01 3.25a.833.833 0 0 0 .833.833l3.25-.01a1.666 1.666 0 0 0 1.18-.488l7.809-7.922a1.667 1.667 0 0 0 0-2.358ZM4.94 12.42 1.69 12.43l.01-3.25 6.368-6.46 3.24 3.24-6.368 6.46Zm7.35-7.442-1.06 1.06-3.24-3.24 1.06-1.06a.833.833 0 0 1 1.179 0l2.061 2.06a.833.833 0 0 1 0 1.18Z"/></svg>`,
+      };
+
+      function renderCard(item, isReply = false, parentId = null) {
+        const isOwner = item.user.username === currentUser.username;
+        const isEditing = activeEditId === item.id;
+
+        // Score / Vote Box markup
+        const voteBox = `
+        <div class="flex items-center md:flex-col bg-veryLightGray rounded-xl px-2 py-1.5 md:py-2.5 space-x-3 md:space-x-0 md:space-y-3 font-medium self-start">
+          <button onclick="handleVote(${item.id}, 1, ${isReply}, ${parentId})" class="group p-1 focus:outline-none flex items-center justify-center cursor-pointer" aria-label="Upvote">
+            ${icons.plus}
+          </button>
+          <span class="text-moderateBlue font-medium text-[15px] select-none min-w-[16px] text-center">${item.score}</span>
+          <button onclick="handleVote(${item.id}, -1, ${isReply}, ${parentId})" class="group p-1 focus:outline-none flex items-center justify-center cursor-pointer" aria-label="Downvote">
+            ${icons.minus}
+          </button>
+        </div>
+      `;
+
+        // Header info (avatar, username, you badge, date)
+        const headerInfo = `
+        <div class="flex items-center space-x-4">
+          <img src="${item.user.image}" alt="${item.user.username}" class="w-8 h-8 rounded-full object-cover">
+          <span class="font-medium text-darkBlue font-rubik tracking-tight">${item.user.username}</span>
+          ${isOwner ? `<span class="bg-moderateBlue text-white text-[12px] font-medium px-1.5 py-[2px] rounded-sm leading-none">you</span>` : ""}
+          <span class="text-grayishBlue text-[14px]">${item.createdAt}</span>
+        </div>
+      `;
+
+        // Action buttons (Reply OR Delete & Edit)
+        const actionButtons = isOwner
+          ? `
+        <div class="flex items-center space-x-4">
+          <button onclick="promptDelete(${item.id}, ${isReply}, ${parentId})" class="flex items-center space-x-1.5 text-softRed font-medium hover:opacity-50 transition duration-150 cursor-pointer">
+            ${icons.delete}
+            <span>Delete</span>
+          </button>
+          <button onclick="toggleEdit(${item.id})" class="flex items-center space-x-1.5 text-moderateBlue font-medium hover:opacity-50 transition duration-150 cursor-pointer">
+            ${icons.edit}
+            <span>Edit</span>
+          </button>
+        </div>
+      `
+          : `
+        <button onclick="toggleReply(${item.id})" class="flex items-center space-x-2 text-moderateBlue font-medium hover:opacity-50 transition duration-150 cursor-pointer">
+          ${icons.reply}
+          <span>Reply</span>
+        </button>
+      `;
+
+        // Content or Edit Form
+        const bodyContent = isEditing
+          ? `
+        <div class="mt-3 flex flex-col items-end space-y-3">
+          <textarea id="edit-textarea-${item.id}" rows="3" class="w-full border border-moderateBlue rounded-lg p-3 text-darkBlue focus:border-moderateBlue focus:ring-1 focus:ring-moderateBlue resize-none text-[15px] leading-relaxed transition">${isReply ? `@${item.replyingTo} ` : ""}${item.content}</textarea>
+          <button onclick="saveEdit(${item.id}, ${isReply}, ${parentId})" class="bg-moderateBlue hover:bg-opacity-70 text-white font-medium px-6 py-2.5 rounded-lg uppercase tracking-wide text-[15px] transition duration-150">
+            Update
+          </button>
+        </div>
+      `
+          : `
+        <p class="text-grayishBlue mt-3 leading-relaxed break-words text-[15px] sm:text-[16px]">
+          ${isReply ? `<span class="font-medium text-moderateBlue cursor-pointer">@${item.replyingTo}</span> ` : ""}${item.content}
+        </p>
+      `;
+
+        return `
+        <article class="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-transparent hover:border-gray-100 transition flex flex-col md:flex-row md:items-start md:space-x-5">
+          <!-- Desktop Vote Counter (Left column) -->
+          <div class="hidden md:block">
+            ${voteBox}
+          </div>
+
+          <!-- Main Content Area -->
+          <div class="flex-1 w-full">
+            <div class="flex items-center justify-between">
+              ${headerInfo}
+              <!-- Desktop Actions -->
+              <div class="hidden md:flex">
+                ${actionButtons}
+              </div>
+            </div>
+
+            ${bodyContent}
+
+            <!-- Mobile Bottom Bar (Score + Actions aligned) -->
+            <div class="flex items-center justify-between mt-4 md:hidden">
+              ${voteBox}
+              ${actionButtons}
+            </div>
+          </div>
+        </article>
+      `;
+      }
+
+      function renderReplyBox(targetId, targetUsername, isReply, parentId) {
+        return `
+        <div class="bg-white rounded-lg p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0 mt-2">
+          <img src="${currentUser.image}" alt="${currentUser.username}" class="w-10 h-10 rounded-full hidden sm:block object-cover">
+          <textarea id="reply-textarea-${targetId}" rows="3" placeholder="Add a comment..." class="w-full border border-lightGray hover:border-moderateBlue focus:border-moderateBlue rounded-lg p-3 px-4 text-darkBlue resize-none text-[15px] placeholder-grayishBlue leading-relaxed outline-none transition"></textarea>
+          <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end">
+            <img src="${currentUser.image}" alt="${currentUser.username}" class="w-8 h-8 rounded-full sm:hidden object-cover">
+            <button onclick="submitReply(${targetId}, '${targetUsername}', ${isReply}, ${parentId})" class="bg-moderateBlue hover:bg-opacity-70 text-white font-medium px-6 py-2.5 sm:py-3 rounded-lg uppercase tracking-wide text-sm sm:text-[15px] transition duration-150">
+              Reply
+            </button>
+          </div>
+        </div>
+      `;
+      }
+
+      function renderMainInputBox() {
+        return `
+        <div class="bg-white rounded-lg p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0 mt-1">
+          <img src="${currentUser.image}" alt="${currentUser.username}" class="w-10 h-10 rounded-full hidden sm:block object-cover">
+          <textarea id="new-comment-textarea" rows="3" placeholder="Add a comment..." class="w-full border border-lightGray hover:border-moderateBlue focus:border-moderateBlue rounded-lg p-3 px-4 text-darkBlue resize-none text-[15px] placeholder-grayishBlue leading-relaxed outline-none transition"></textarea>
+          <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end">
+            <img src="${currentUser.image}" alt="${currentUser.username}" class="w-8 h-8 rounded-full sm:hidden object-cover">
+            <button onclick="submitNewComment()" class="bg-moderateBlue hover:bg-opacity-70 text-white font-medium px-7 py-2.5 sm:py-3 rounded-lg uppercase tracking-wide text-sm sm:text-[15px] transition duration-150">
+              Send
+            </button>
+          </div>
+        </div>
+      `;
+      }
+
+      function render() {
+        const container = document.getElementById("comments-container");
+        let html = "";
+
+        comments.forEach((comment) => {
+          // Render Parent Comment
+          html += `<div class="flex flex-col space-y-4">`;
+          html += renderCard(comment, false, null);
+
+          // If reply box is opened directly under this main comment
+          if (activeReplyId === comment.id) {
+            html += renderReplyBox(
+              comment.id,
+              comment.user.username,
+              false,
+              comment.id,
+            );
+          }
+
+          // Render replies if any
+          if (comment.replies && comment.replies.length > 0) {
+            html += `
+            <div class="relative pl-4 sm:pl-10 md:pl-11 flex flex-col space-y-4">
+              <!-- Vertical Thread line matching Figma layout -->
+              <div class="absolute left-0 sm:left-5 md:left-6 top-0 bottom-0 w-[2px] bg-lightGray rounded"></div>
+          `;
+
+            comment.replies.forEach((reply) => {
+              html += renderCard(reply, true, comment.id);
+              if (activeReplyId === reply.id) {
+                html += renderReplyBox(
+                  reply.id,
+                  reply.user.username,
+                  true,
+                  comment.id,
+                );
+              }
+            });
+
+            html += `</div>`;
+          }
+
+          html += `</div>`;
+        });
+
+        // Bottom Main Comment Box
+        html += renderMainInputBox();
+
+        container.innerHTML = html;
+
+        // Focus reply textarea if newly opened
+        if (activeReplyId) {
+          const replyInput = document.getElementById(
+            `reply-textarea-${activeReplyId}`,
+          );
+          if (replyInput) {
+            replyInput.focus();
+          }
+        }
+      }
+
+      function handleVote(id, delta, isReply, parentId) {
+        function adjustScore(item) {
+          if (item.id === id) {
+            // Allow toggle vote behavior
+            if (item.userVote === delta) {
+              item.score -= delta;
+              item.userVote = 0;
+            } else {
+              item.score += delta - item.userVote;
+              item.userVote = delta;
+            }
+          }
+        }
+
+        comments.forEach((comment) => {
+          if (!isReply) {
+            adjustScore(comment);
+          } else if (comment.id === parentId) {
+            comment.replies.forEach(adjustScore);
+          }
+        });
+
+        saveToStorage();
+        render();
+      }
+
+      function toggleReply(id) {
+        activeReplyId = activeReplyId === id ? null : id;
+        render();
+        if (activeReplyId) {
+          const input = document.getElementById(`reply-textarea-${id}`);
+          if (input) {
+            input.focus();
+          }
+        }
+      }
+
+      function submitReply(targetId, targetUsername, isReply, parentId) {
+        const textarea = document.getElementById(`reply-textarea-${targetId}`);
+        if (!textarea) return;
+
+        let text = textarea.value.trim();
+        // Remove @mention if typed in front
+        const mentionPrefix = `@${targetUsername}`;
+        if (text.startsWith(mentionPrefix)) {
+          text = text.substring(mentionPrefix.length).trim();
+        }
+
+        if (!text) return;
+
+        const newReply = {
+          id: Date.now(),
+          content: text,
+          createdAt: "Just now",
+          score: 0,
+          replyingTo: targetUsername,
+          user: {
+            image: currentUser.image,
+            username: currentUser.username,
+          },
+          userVote: 0,
+        };
+
+        const parentComment = comments.find((c) => c.id === parentId);
+        if (parentComment) {
+          if (!parentComment.replies) parentComment.replies = [];
+          parentComment.replies.push(newReply);
+        }
+
+        activeReplyId = null;
+        saveToStorage();
+        render();
+      }
+
+      function submitNewComment() {
+        const textarea = document.getElementById("new-comment-textarea");
+        if (!textarea) return;
+        const text = textarea.value.trim();
+        if (!text) return;
+
+        const newComment = {
+          id: Date.now(),
+          content: text,
+          createdAt: "Just now",
+          score: 0,
+          user: {
+            image: currentUser.image,
+            username: currentUser.username,
+          },
+          userVote: 0,
+          replies: [],
+        };
+
+        comments.push(newComment);
+        saveToStorage();
+        render();
+      }
+
+      function toggleEdit(id) {
+        activeEditId = activeEditId === id ? null : id;
+        render();
+      }
+
+      function saveEdit(id, isReply, parentId) {
+        const textarea = document.getElementById(`edit-textarea-${id}`);
+        if (!textarea) return;
+        let text = textarea.value.trim();
+
+        if (isReply) {
+          const comment = comments.find((c) => c.id === parentId);
+          const reply = comment?.replies.find((r) => r.id === id);
+          if (reply) {
+            const mentionPattern = new RegExp(`^@${reply.replyingTo}\\s*`);
+            text = text.replace(mentionPattern, "");
+            reply.content = text;
+          }
+        } else {
+          const comment = comments.find((c) => c.id === id);
+          if (comment) {
+            comment.content = text;
+          }
+        }
+
+        activeEditId = null;
+        saveToStorage();
+        render();
+      }
+
+      const modal = document.getElementById("delete-modal");
+      const modalCancelBtn = document.getElementById("modal-cancel-btn");
+      const modalDeleteBtn = document.getElementById("modal-delete-btn");
+
+      function promptDelete(id, isReply, parentId) {
+        itemPendingDeletion = { id, isReply, parentId };
+        modal.classList.remove("hidden");
+      }
+
+      modalCancelBtn.addEventListener("click", () => {
+        itemPendingDeletion = null;
+        modal.classList.add("hidden");
+      });
+
+      modalDeleteBtn.addEventListener("click", () => {
+        if (!itemPendingDeletion) return;
+        const { id, isReply, parentId } = itemPendingDeletion;
+
+        if (!isReply) {
+          comments = comments.filter((c) => c.id !== id);
+        } else {
+          const parent = comments.find((c) => c.id === parentId);
+          if (parent) {
+            parent.replies = parent.replies.filter((r) => r.id !== id);
+          }
+        }
+
+        itemPendingDeletion = null;
+        modal.classList.add("hidden");
+        saveToStorage();
+        render();
+      });
+
+      // Initial load
+      render();
+    </script>
+  </body>
+</html>
